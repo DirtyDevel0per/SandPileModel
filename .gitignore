@@ -1,3 +1,6 @@
+.idea
+bmp_files
+cmake-build-debug
 # Prerequisites
 *.d
 
