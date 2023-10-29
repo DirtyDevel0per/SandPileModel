@@ -1,1 +1,2 @@
-add_library(sandpile sandpile.cpp sandpile.h)
+add_library(sandpile sandpile.cpp sandpile.h bmp.cpp)
+
