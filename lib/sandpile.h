@@ -21,7 +21,7 @@ struct Field {
   }
 };
 
-int Main(const CommandLineArguments& args);
+int SandPile(const CommandLineArguments& args);
 
 Field FileParser(const char* filename);
 

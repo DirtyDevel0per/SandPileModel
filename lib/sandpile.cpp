@@ -2,33 +2,40 @@
 #include <fstream>
 #include "sandpile.h"
 
-void FieldExtension(Field& field, const char offset) {
+void FieldExtension(Field& field) {
   uint32_t it_y = 0;
   uint32_t it_x = 0;
   uint32_t skip_flag_height = 0;
   uint32_t skip_flag_width = 0;
   int32_t new_width = field.cur_width;
   int32_t new_height = field.cur_height;
-
-  switch (offset) {
-    case 'l':
+  for (int i = 0; i < field.cur_height; ++i) {
+    if (field.pixels[i][0] >= 4) {
       ++new_width;
       it_x = 1;
       break;
-    case 'r':
+    }
+  }
+  for (int i = 0; i < field.cur_height; ++i) {
+    if (field.pixels[i][field.cur_width - 1] >= 4) {
       ++new_width;
       skip_flag_width = 1;
       break;
-    case 't':
-      ++new_height;
-      skip_flag_height = 1;
-      break;
-    case 'b':
+    }
+  }
+  for (int i = 0; i < field.cur_width; ++i) {
+    if (field.pixels[0][i] >= 4) {
       ++new_height;
       it_y = 1;
       break;
-    default:
+    }
+  }
+  for (int i = 0; i < field.cur_width; ++i) {
+    if (field.pixels[field.cur_height - 1][i] >= 4) {
+      ++new_height;
+      skip_flag_height = 1;
       break;
+    }
   }
 
   uint64_t** new_pixels = new uint64_t*[new_height];
@@ -50,60 +57,41 @@ void FieldExtension(Field& field, const char offset) {
   field.cur_height = new_height;
 
 }
-void IsFieldSizeEnough(Field& field, int& pos_x, int& pos_y, int& skip_w, int& skip_h) {
-  if (pos_x + 1 >= field.cur_width) {
-    ++skip_w;
-    FieldExtension(field, 'r');
-  }
-  if (pos_x - 1 < 0) {
-    ++pos_x;
-    FieldExtension(field, 'l');
-  }
-  if (pos_y + 1 >= field.cur_height) {
-    ++skip_h;
-    FieldExtension(field, 't');
-  }
-  if (pos_y - 1 < 0) {
-    ++pos_y;
-    FieldExtension(field, 'b');
-  }
-}
-
-bool CellPile(Field& field, int& pos_x, int& pos_y, int& skip_w, int& skip_h) {
-
-  if (field.pixels[pos_y][pos_x] >= 4) {
-    IsFieldSizeEnough(field, pos_x, pos_y, skip_w, skip_h);
+void CellTopple(Field& field, int pos_x, int pos_y) {
     ++field.pixels[pos_y + 1][pos_x];
     ++field.pixels[pos_y - 1][pos_x];
     ++field.pixels[pos_y][pos_x + 1];
     ++field.pixels[pos_y][pos_x - 1];
     field.pixels[pos_y][pos_x] -= 4;
-    return true;
-  }
-
-  return false;
 }
 
-bool FieldPile(Field& field) {
-  bool flag = false;
-  int skip_h = 0;
-  int skip_w = 0;
+bool FieldTopple(Field& field) {
+  std::pair<int32_t, int32_t>* cells = new std::pair<int32_t, int32_t>[field.cur_height * field.cur_width];
+  int cells_counter = 0;
+  bool flag = true;
+  FieldExtension(field);
 
-  for (int i = 0; i < field.cur_height - skip_h; ++i)
-    for (int j = 0; j < field.cur_width - skip_w; ++j)
-      if (CellPile(field, j, i, skip_w, skip_h))
-        flag = true;
+  for (int i = 0; i < field.cur_height; ++i)
+    for (int j = 0; j < field.cur_width; ++j)
+      if (field.pixels[i][j] >= 4) {
+        cells[cells_counter] = {i, j};
+        ++cells_counter;
+      }
+  if (cells_counter == 0)
+    flag = false;
+  for (int i = 0; i < cells_counter; ++i)
+    CellTopple(field, cells[i].second, cells[i].first);
+  delete[] cells;
   return flag;
 }
 
-int Main(const CommandLineArguments& args) {
+int SandPile(const CommandLineArguments& args) {
   Field field = FileParser(args.input_file_path);
-  bool flag = true;
   size_t it = 0;
   int64_t number_of_picture = 1;
 
   while (it < args.max_iter) {
-    if (!FieldPile(field))
+    if (!FieldTopple(field))
       break;
     ++it;
     if (args.freq && it % args.freq == 0) {
@@ -124,7 +112,6 @@ Field FileParser(const char* filename) {
   int16_t min_x = 0;
   int16_t min_y = 0;
   char str[30]{'\0'};
-  char buff[10];
 
   if (!f.is_open())
     exit(EXIT_FAILURE);

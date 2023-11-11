@@ -15,6 +15,6 @@ int main(int argc, const char** argv) {
     std::cerr << "Wrong arguments/parameters";
     exit(EXIT_FAILURE);
   }
-  Main(args);
+  SandPile(args);
   return 0;
 }
