@@ -1,3 +1,9 @@
+CMakeFiles
+CMakeCache.txt
+.idea
+bmp_files
+*.tsv
+cmake-build-debug
 # Prerequisites
 *.d
 
